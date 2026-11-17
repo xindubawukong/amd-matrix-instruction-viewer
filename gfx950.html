@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Browse CDNA 4 instruction names, opcodes, encodings, and operands offline.">
+  <title>CDNA 4 (gfx950) ISA reference</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="gfx950-isa.js"></script>
+  <script defer src="gfx950.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span> AMD Matrix Instruction Viewer</div>
+      <a class="upstream" href="index.html?arch=cdna4">← Matrix layouts</a>
+    </div>
+  </header>
+  <noscript><p class="script-error">Enable JavaScript to browse the ISA reference.</p></noscript>
+  <main class="workspace isa-workspace">
+    <aside class="sidebar" aria-label="Instruction filters">
+      <section class="side-section">
+        <h2>Find an instruction</h2>
+        <label class="field">Mnemonic, alias, or opcode
+          <input type="search" id="isa-search" placeholder="e.g. ds_read, 0xe3" autocomplete="off">
+        </label>
+        <label class="field">Instruction group
+          <select id="isa-group">
+            <option value="all">All instructions</option>
+            <option value="matrix-kernel">Matrix kernel instructions</option>
+          </select>
+        </label>
+      </section>
+    </aside>
+    <div class="main-column">
+      <div class="isa-heading">
+        <div><h1>CDNA 4 ISA reference</h1><p class="muted" id="isa-total"></p></div>
+        <a class="control" href="https://gpuopen.com/machine-readable-isa/" target="_blank" rel="noopener noreferrer">AMD source ↗</a>
+      </div>
+      <div class="isa-browser">
+        <section class="panel isa-results" aria-labelledby="isa-results-title">
+          <div class="panel-heading">
+            <h2 id="isa-results-title">Instructions</h2>
+            <span class="muted" id="isa-result-count" aria-live="polite"></span>
+          </div>
+          <ul id="isa-results"></ul>
+          <nav class="isa-pagination" aria-label="Instruction pages" id="isa-pagination">
+            <button type="button" class="control" id="isa-previous">← Previous</button>
+            <button type="button" class="control" id="isa-next">Next →</button>
+          </nav>
+        </section>
+        <section class="panel isa-detail" id="isa-detail" aria-labelledby="isa-mnemonic">
+          <div class="isa-detail-heading">
+            <h2 id="isa-mnemonic" tabindex="-1"></h2>
+            <p id="isa-family" class="isa-secondary"></p>
+          </div>
+          <p id="isa-description"></p>
+          <p id="isa-aliases" class="isa-secondary"></p>
+          <section id="isa-related" class="isa-related" hidden></section>
+          <label class="field" id="isa-encoding-label">Encoding
+            <select id="isa-encoding"></select>
+          </label>
+          <div id="isa-operands"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

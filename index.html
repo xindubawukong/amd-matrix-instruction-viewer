@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Inspect AMD matrix instructions and explore matrix, lane, and VGPR layouts offline.">
+  <title>AMD Matrix Instruction Viewer</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="instruction-data.js"></script>
+  <script defer src="cdna4-data.js"></script>
+  <script defer src="layout.js"></script>
+  <script defer src="exports.js"></script>
+  <script defer src="viewer.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span> AMD Matrix Instruction Viewer</div>
+      <nav class="header-links" aria-label="References">
+        <a class="upstream isa-link" href="gfx950.html">gfx950 ISA reference <span aria-hidden="true">→</span></a>
+        <a class="upstream" href="https://github.com/ROCm/amd_matrix_instruction_calculator" target="_blank" rel="noopener noreferrer">AMD calculator <span aria-hidden="true">↗</span></a>
+      </nav>
+    </div>
+  </header>
+  <noscript><p class="script-error">Enable JavaScript to use the instruction viewer.</p></noscript>
+  <main class="workspace">
+    <aside class="sidebar" aria-label="Instruction and query settings">
+      <section class="side-section">
+        <h2>Instruction</h2>
+        <label class="field">Architecture
+          <select id="architecture"></select>
+        </label>
+        <label class="field">Filter instructions
+          <input type="search" id="instruction-filter" placeholder="Name, shape, or type" autocomplete="off">
+          <span id="filter-status" role="status" hidden>No matching instructions.</span>
+        </label>
+        <label class="field">Matrix instruction mnemonic
+          <select id="instruction"></select>
+        </label>
+        <label class="field">Wavefront
+          <select id="wave"></select>
+        </label>
+      </section>
+      <section class="side-section">
+        <h2>Lookup</h2>
+        <form id="coordinate-form">
+          <div class="field-pair">
+            <label class="field"><span id="row-label">Row · i</span><input id="query-row" type="number" min="0" step="1" required></label>
+            <label class="field"><span id="col-label">Column · j</span><input id="query-col" type="number" min="0" step="1" required></label>
+          </div>
+          <button class="control lookup-button" type="submit">Find register <span aria-hidden="true">↗</span></button>
+        </form>
+        <form id="register-form">
+          <div class="field-pair">
+            <label class="field">Lane<input id="query-lane" type="number" min="0" step="1" required></label>
+            <label class="field">Register<select id="query-register" required></select></label>
+          </div>
+          <button class="control lookup-button" type="submit">Find elements <span aria-hidden="true">↗</span></button>
+        </form>
+      </section>
+      <section class="side-section" id="modifier-section">
+        <h2>Modifiers</h2>
+        <div id="modifiers"></div>
+        <p id="modifier-note" class="muted"></p>
+      </section>
+    </aside>
+    <div class="main-column">
+      <section class="instruction-overview" aria-labelledby="mnemonic">
+        <div class="overview-top">
+          <h1 id="mnemonic"></h1>
+          <button class="control details-button" id="show-details" type="button">Instruction details <span aria-hidden="true">↗</span></button>
+        </div>
+        <dl id="instruction-stats" class="stats"></dl>
+      </section>
+      <section class="explorer" aria-label="Layout explorer">
+        <div class="explorer-toolbar">
+          <div class="operand-controls">
+            <span id="operand-label">Lookup operand</span>
+            <div class="matrix-tabs" id="matrix-tabs" role="group" aria-labelledby="operand-label"></div>
+          </div>
+          <div class="view-controls">
+            <label class="block-control" id="block-control">Block <select id="block" aria-label="Block"></select></label>
+            <label class="toggle"><input type="checkbox" id="show-locations"> Full locations</label>
+            <a href="#register-panel">Registers by lane ↓</a>
+          </div>
+        </div>
+        <div class="selection">
+          <div class="selection-status">
+            <div class="selection-line"><h2>Selection</h2><div id="selection-value" aria-live="polite"></div></div>
+            <div class="selection-line preview-line"><span>Hover</span><span id="preview-value">Move over a cell to highlight its lane and VGPR.</span></div>
+          </div>
+          <div class="legend" aria-label="Highlight colors">
+            <span><i class="swatch exact"></i>Exact match</span>
+            <span><i class="swatch lane"></i>Same lane</span>
+            <span><i class="swatch register"></i>Same VGPR offset</span>
+          </div>
+        </div>
+        <div class="panels">
+          <section class="panel register-panel" id="register-panel" aria-labelledby="register-title" tabindex="-1">
+            <div class="panel-heading">
+              <div><h2 id="register-title">Registers by lane</h2><p id="register-subtitle"></p></div>
+              <div class="panel-controls">
+                <label class="toggle"><input type="checkbox" id="register-transpose"> Transpose</label>
+                <details class="export-menu">
+                  <summary class="control">Export <span aria-hidden="true">⌄</span></summary>
+                  <div class="export-options"></div>
+                </details>
+              </div>
+            </div>
+            <div id="register-scroll" class="table-scroll" tabindex="0" role="region" aria-label="Registers by lane"></div>
+          </section>
+        </div>
+      </section>
+      <details class="trace panel" id="trace">
+        <summary><span>Output calculation</span> <span class="muted" id="trace-caption"></span></summary>
+        <div id="trace-content"></div>
+      </details>
+    </div>
+  </main>
+  <template id="matrix-panel-template">
+    <section class="panel matrix-panel">
+      <div class="panel-heading">
+        <div><h2></h2><p></p></div>
+        <div class="panel-controls">
+          <div class="output-toggle" role="group" aria-label="Accumulator or output" hidden>
+            <button type="button" data-output="C" aria-label="C accumulator">C</button>
+            <button type="button" data-output="D" aria-label="D output">D</button>
+          </div>
+          <label class="toggle"><input type="checkbox" class="matrix-transpose"> Transpose</label>
+          <details class="export-menu">
+            <summary class="control">Export <span aria-hidden="true">⌄</span></summary>
+            <div class="export-options"></div>
+          </details>
+        </div>
+      </div>
+      <input class="matrix-scrollbar" type="range" min="0" value="0" hidden>
+      <div class="matrix-grid"></div>
+    </section>
+  </template>
+  <dialog id="detail-dialog" aria-labelledby="detail-title">
+    <div class="dialog-heading"><h2 id="detail-title">Instruction details</h2><form method="dialog"><button class="control" type="submit">Close</button></form></div>
+    <pre id="detail-text"></pre>
+    <div class="dialog-footer"><a id="encoding-reference" target="_blank" rel="noopener noreferrer">Instruction encoding reference ↗</a><span id="source-version"></span></div>
+  </dialog>
+</body>
+</html>
